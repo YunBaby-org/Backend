@@ -5,8 +5,11 @@ import express from 'express';
 import { createConnection } from 'typeorm';
 import ormconfig from '../ormconfig';
 import connectSessionStorage from './SessionStorage';
+import logger, { express_logger, express_error_logger } from './logger'
 
 /* TODO: Use standard model to create database entity mapping, don't create a object on the fly :p */
+/* TODO: Rewrite this shit with typescript */
+/* TODO: implement graceful shotdown for agent-server */
 
 async function create_app() {
     const app = express();
@@ -17,8 +20,11 @@ async function create_app() {
 
     app.use(sessionMgr);
     app.use(bodyParser.json())
+    app.use(express_logger);
 
+    logger.info(`connecting to database ${ormconfig.type}://${ormconfig.host}:${ormconfig.port}`)
     const connection = await createConnection(ormconfig);
+    logger.info(`connect to database successfully`)
     
     server.dbconnection = () => connection;
 
@@ -30,6 +36,12 @@ async function create_app() {
 
         // Keycoded restriction, prevent someone from trying to fuck up the server
         if(typeof email != 'string' || typeof passwd != 'string' || email.length >= 100 || passwd.length >= 100){
+            logger.warn(`invalid format of userinfo`, {
+                emailType: typeof email,
+                emailLength: email.length,
+                passwdType: typeof passwd,
+                passwdLength: passwd.length
+            });
             res.status(403);
             res.send('Rejected');
             return;
@@ -109,7 +121,7 @@ async function create_app() {
             try{
                 message_parsed = JSON.parse(msg);
             } catch(e) {
-                console.error("Response is not in JSON format");
+                logger.error("Unable to parse payload into json")
                 ws.send("No");      /* this is for testing purpose, remove it in further version */
                 return;
             }
@@ -127,14 +139,30 @@ async function create_app() {
         });
     });//}}}
 
+    /* Server on close *///{{{
     server.close = async function() {
+        function exception_handler(description) {
+            return (reason) => logger.error(description, { exception: reason })
+        }
+        logger.info(`Closing agent-server`)
+        await new Promise((resolve, reject) => {
+            const handler = (err) => { err ? reject(err) : resolve() }
+            Object.getPrototypeOf(server).close.bind(server,handler)();
+        });
+
+        logger.info(`Closing connection to redis session storage`)
         await sessionMgr.close()
-        await Object.getPrototypeOf(server).close.bind(server)()
+            .catch(exception_handler("failed to close session storage"))
+
+        logger.info(`Closing connection to database`)
         await connection.close()
-    }
+            .catch(exception_handler("failed to close database connection"))
+    }//}}}
+
+    app.use(express_error_logger);
 
     server.listen(3000, function() {
-        console.log(`Listening at ${server.address().address}:${server.address().port}`);
+        logger.info(`Listening at ${server.address().address}:${server.address().port}`)
     });
 
     return server;

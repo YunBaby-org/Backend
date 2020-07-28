@@ -60,7 +60,7 @@ describe('Interaction between database and agent server', function () {
     });
 
     it('Sending response to websocket', (done) => {
-        const ws = new WebSocket(`ws://localhost:${process.env.PORT || 3000}`, [], {
+        const ws = new WebSocket(`ws://0.0.0.0:${server.address().port}`, [], {
             headers: { Cookie: cookie }
         });
         ws.on('open',() => {
