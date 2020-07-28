@@ -1,5 +1,4 @@
 import http from 'http';
-import {v4 as uuid} from 'uuid';
 import bodyParser from 'body-parser'
 import WebSocket from 'ws';
 import express from 'express';
@@ -128,14 +127,11 @@ async function create_app() {
         });
     });//}}}
 
-    let closed = false;
-    server.on('close', () => {
-        if(!closed)
-        {
-            connection.close();
-            closed = true;
-        }
-    })
+    server.close = async function() {
+        await sessionMgr.close()
+        await Object.getPrototypeOf(server).close.bind(server)()
+        await connection.close()
+    }
 
     server.listen(3000, function() {
         console.log(`Listening at ${server.address().address}:${server.address().port}`);

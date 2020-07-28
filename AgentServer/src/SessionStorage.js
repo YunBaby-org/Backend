@@ -13,9 +13,8 @@ async function connectSessionStorage() {
     });
 
     /* Hack, Override session manager close function, quit redis client when session manager closed */
-    sessionMgr.close = async function close() {
-        await sessionMgr.close();
-        await new Promise((res) => redisClient.quit(() => res()));
+    sessionMgr.close = async function() {
+        await new Promise((res) => redisClient.quit(() => res()))
     }
 
     return sessionMgr;
