@@ -1,0 +1,82 @@
+version: "3.7"
+
+# Local development setup
+
+volumes:
+    pg_data:
+        name: "postgres_data"
+    redis-session-data:
+        name: "redis-session-data"
+
+networks:
+    backend:
+        driver: bridge
+services:
+
+    postgresql:
+        image: postgres:12-alpine
+        volumes:
+            - pg_data:/var/lib/postgresql/data
+            - ./config/postgres/passwd:/run/secrets/postgres-passwd             # secret file
+        expose:
+            - 5432
+        ports:
+            - 127.0.0.1:5432:5432
+        networks:
+            - backend
+        environment:
+            - POSTGRES_PASSWORD_FILE=/run/secrets/postgres-passwd               
+            - POSTGRES_USER=postgres
+            - POSTGRES_DB=postgres
+
+    pgAdmin:
+        image: dpage/pgadmin4:latest
+        ports:
+            - 127.0.0.1:80:80
+        expose:
+            - 80
+        networks:
+            - backend
+        env_file:
+            - ./config/pgAdmin/pgAdmin4.env                                     # Not so secret file (?)
+
+    flyway:
+        image: flyway/flyway
+        networks:
+            - backend
+        volumes:
+            - ./migrations:/flyway/sql
+            - ./config/flyway/flyway.conf:/flyway/conf/flyway.conf              # secret file
+        command: migrate
+        depends_on:
+            - postgresql
+
+    agent-server:
+        build: ./AgentServer
+        environment:
+            - NODE_ENV=production
+        volumes:
+            - ./config/agnet-server/agent-server.env:/run/secrets/agent-server.env  # secret file
+        expose:
+            - 3000
+        environment:
+            - NODE_ENV=development
+            - AGENT_SERVER_CONFIG_FILE=/run/secrets/agent-server.env
+        networks:
+            - backend
+        depends_on:
+            - flyway
+            - postgresql
+            - redis-session
+
+    # Session storage
+    redis-session:
+        image: redis:6-alpine
+        volumes:
+            - redis-session-data:/data
+        ports:
+            - 127.0.0.1:6379:6379
+        expose:
+            - 6379
+        networks:
+            - backend
