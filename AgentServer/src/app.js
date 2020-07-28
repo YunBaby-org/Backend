@@ -1,14 +1,11 @@
 import http from 'http';
 import {v4 as uuid} from 'uuid';
 import bodyParser from 'body-parser'
-import RedisStore from 'connect-redis';
-import redis from 'redis';
 import WebSocket from 'ws';
 import express from 'express';
-import process from 'process';
-import session from 'express-session';
 import { createConnection } from 'typeorm';
 import ormconfig from '../ormconfig';
+import connectSessionStorage from './SessionStorage';
 
 /* TODO: Use standard model to create database entity mapping, don't create a object on the fly :p */
 
@@ -17,14 +14,8 @@ async function create_app() {
     const map = new Map();
     const server = http.createServer(app);
     const wss = new WebSocket.Server({ noServer: true });
+    const sessionMgr = await connectSessionStorage();
 
-    const redisClient = redis.createClient((process.env.SESSION_STORAGE_URL || "redis://localhost"));
-    const sessionMgr = session({
-        store: new (RedisStore(session))({ client: redisClient }),
-        saveUninitialized: false,
-        secret: process.env.SESSION_SECRET,
-        resave: true,
-    });
     app.use(sessionMgr);
     app.use(bodyParser.json())
 
@@ -141,7 +132,6 @@ async function create_app() {
     server.on('close', () => {
         if(!closed)
         {
-            redisClient.quit()
             connection.close();
             closed = true;
         }

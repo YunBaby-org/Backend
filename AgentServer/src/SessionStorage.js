@@ -8,9 +8,16 @@ async function connectSessionStorage() {
     const sessionMgr = session({
         store: new (RedisStore(session))({ client: redisClient }),
         saveUninitialized: false,
-        secret: process.env.SESSION_SECRET,
-        resave: true,
+        secret: process.env.SESSION_SECRET || "!SECRET!",
+        resave: false,
     });
+
+    /* Hack, Override session manager close function, quit redis client when session manager closed */
+    sessionMgr.close = async function close() {
+        await sessionMgr.close();
+        await new Promise((res) => redisClient.quit(() => res()));
+    }
+
     return sessionMgr;
 }
 
