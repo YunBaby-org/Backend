@@ -1,6 +1,5 @@
-import dotenv from 'dotenv';
+import logger from './logger';
 import create_app from './app.js';
 
-dotenv.config();
-
+logger.info("Creating application");
 create_app();

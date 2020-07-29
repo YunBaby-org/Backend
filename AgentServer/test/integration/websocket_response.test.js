@@ -21,47 +21,12 @@ describe('Interaction between database and agent server', function () {
     let server, requester, cookie;
     let mock_uuid;
     let mock_response;
-    let network, postgres, flyway, redis;
-
-    this.timeout(60 * 1000);
 
     this.beforeAll( async () => {
 
-        // /* Setup Postgres, flyawy and Redis */
-        // network = await new Network({name: 'test'}).start();
-
-        // postgres = await new GenericContainer("postgres")
-        //     .withName("postgres")
-        //     .withNetworkMode(network.getName())
-        //     .withExposedPorts(5432)
-        //     .withEnv('POSTGRES_PASSWORD', 'password')
-        //     .start();
-
-        // ormconfig.port = postgres.getMappedPort(5432);
-
-        // flyway   = await new GenericContainer("flyway/flyway")
-        //     .withName('flyway')
-        //     .withEnv('FLYWAY_URL',`jdbc:postgresql://${"postgres"}:${5432}/postgres`)
-        //     .withEnv('FLYWAY_USER','postgres')
-        //     .withEnv('FLYWAY_PASSWORD','password')
-        //     .withBindMount(resolve(__dirname, '../../../migrations'), '/flyway/sql')
-        //     .withNetworkMode(network.getName())
-        //     .withWaitStrategy(Wait.forLogMessage('+------------+'))
-        //     .withCmd(['migrate'])
-        //     .start();
-        // await new Promise((resolve) => { setTimeout(resolve, 1000)});
-
-        // redis    = await new GenericContainer("redis")
-        //     .withName('redis')
-        //     .withNetworkMode(network.getName())
-        //     .withExposedPorts(6379)
-        //     .start()
-
-        // process.env['redisUrl'] = `redis://localhost:${redis.getMappedPort(6379)}`
-
         /* Create app and requester */
         server = await create_app();
-        requester = chai.request(server).keepOpen();
+        requester = chai.request.agent(server);
 
         /* Create a fake user at database */
         faker.locale = 'zh_TW'
@@ -85,18 +50,17 @@ describe('Interaction between database and agent server', function () {
         cookie = cookie.substr(0, cookie.indexOf(';'));
 
         /* Generate mock data */
-        const response2 = await requester.get('/whoami').set('Cookie', cookie);
+        const response2 = await requester.get('/whoami');
         mock_uuid = response2.body.userid
         mock_response = {
             Response: "ScanGPS",
             Status: "Failed",
             Info: "Request Not Supported"
         };
-
     });
 
     it('Sending response to websocket', (done) => {
-        const ws = new WebSocket(`ws://localhost:${process.env.PORT || 3000}`, [], {
+        const ws = new WebSocket(`ws://0.0.0.0:${server.address().port}`, [], {
             headers: { Cookie: cookie }
         });
         ws.on('open',() => {
@@ -121,10 +85,6 @@ describe('Interaction between database and agent server', function () {
 
     this.afterAll(async () => {
         await server.close();
-        // await postgres.stop({removeVolumes: true});
-        // await flyway.stop({removeVolumes: true});
-        // await redis.stop({removeVolumes: true});
-        // await network.stop()
     })
 
 });

@@ -1,10 +1,6 @@
 import chai from 'chai';
-import {Duration, TemporalUnit} from 'node-duration';
-import {setTimeout} from 'core-js';
 import faker from 'faker';
 import {describe, it} from 'mocha';
-import {resolve} from 'path';
-// import {GenericContainer, Network, Wait} from 'testcontainers';
 import {createConnection} from 'typeorm';
 import {v4 as uuid} from 'uuid';
 import ormconfig from '../../ormconfig';
@@ -13,39 +9,11 @@ const expect = chai.expect;
 
 describe('Test database schema equal to local ORM setup', function () {
 
-    this.timeout(60 * 1000);
-
     let connection;
     let mock_uuid;
     let mock_response;
-    let postgres, flyway, network;
 
     this.beforeAll( async () => {
-
-        // /* Create network & postgres & flyway */
-        // network = await new Network({name: 'test'}).start();
-
-        // postgres = await new GenericContainer("postgres")
-        //     .withName("postgres")
-        //     .withNetworkMode(network.getName())
-        //     .withExposedPorts(5432)
-        //     .withEnv('POSTGRES_PASSWORD', 'password')
-        //     .start();
-
-        // ormconfig.port = postgres.getMappedPort(5432);
-
-        // flyway   = await new GenericContainer("flyway/flyway")
-        //     .withName('flyway')
-        //     .withEnv('FLYWAY_URL',`jdbc:postgresql://${"postgres"}:${5432}/postgres`)
-        //     .withEnv('FLYWAY_USER','postgres')
-        //     .withEnv('FLYWAY_PASSWORD','password')
-        //     .withBindMount(resolve(__dirname, '../../../migrations'), '/flyway/sql')
-        //     .withNetworkMode(network.getName())
-        //     .withWaitStrategy(Wait.forLogMessage('+------------+'))
-        //     .withCmd(['migrate'])
-        //     .withStartupTimeout(1000)
-        //     .start();
-        // await new Promise((resolve) => { setTimeout(resolve, 1000)});
 
         /* Establish connection to database */
         connection = await createConnection(ormconfig);
@@ -94,13 +62,7 @@ describe('Test database schema equal to local ORM setup', function () {
     });
 
     this.afterAll(async () => {
-
         if(connection) await connection.close();
-
-        const time = new Duration(1, TemporalUnit.SECONDS);
-        // await postgres.stop({timeout : time, removeVolumes: true});
-        // await flyway.stop({timeout : time, removeVolumes: true});
-        // await network.stop({timeout: time});
     })
 
 });
