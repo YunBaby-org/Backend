@@ -1,14 +1,13 @@
 import { describe, it } from 'mocha';
-import ormconfig from '../../ormconfig'
 import faker from 'faker';
 import WebSocket from 'ws';
-import process from 'process';
 import chaiHttp from 'chai-http';
 import chai from 'chai';
+import {getRepository} from 'typeorm'
+import {connect, disconnect} from '../../src/database';
 import create_app from '../../src/app';
 import dotenv from 'dotenv';
-// import {GenericContainer, Network, Wait} from 'testcontainers';
-import {resolve} from 'path';
+
 
 dotenv.config();
 
@@ -25,6 +24,7 @@ describe('Interaction between database and agent server', function () {
     this.beforeAll( async () => {
 
         /* Create app and requester */
+        await connect();
         server = await create_app();
         requester = chai.request.agent(server);
 
@@ -37,8 +37,7 @@ describe('Interaction between database and agent server', function () {
             email:      "someone@somewhere",
             password:   "p@ssw0rd"
         };
-        const connection = server.dbconnection();
-        await connection.getRepository('user').save(user);
+        await getRepository('user').save(user);
 
         /* Get session id */
         const response = await requester.post('/login').send({
@@ -74,8 +73,7 @@ describe('Interaction between database and agent server', function () {
     });
 
     it('Ensure response was in the database', async () => {
-        const connection = server.dbconnection();
-        const log = await connection.getRepository("device_log").findOne({ where: {deviceId : mock_uuid}});
+        const log = await getRepository("device_log").findOne({ where: {deviceId : mock_uuid}});
 
         expect(log).to.not.be.undefined;
         expect(log.deviceId).to.be.equal(mock_uuid);
@@ -83,8 +81,36 @@ describe('Interaction between database and agent server', function () {
         expect(log.content.Response).to.be.equal(mock_response.Response);
     });
 
+    it('should report that user is authorized', (done) =>{
+        requester.get('/whoami')
+            .end(function(err, res) {
+                expect(err).to.be.null;
+                expect(res).to.have.status(200)
+                done();
+            });
+    })
+
+    it('should logout', (done) =>{
+        requester.delete('/logout')
+            .end(function(err, res) {
+                expect(err).to.be.null;
+                expect(res).to.have.status(200)
+                done();
+            });
+    })
+    
+    it('should report that user is not authorized', (done) =>{
+        requester.get('/whoami')
+            .end(function(err, res) {
+                expect(err).to.be.null;
+                expect(res).to.have.status(401)
+                done();
+            });
+    })
+
     this.afterAll(async () => {
         await server.close();
+        await disconnect();
     })
 
 });
