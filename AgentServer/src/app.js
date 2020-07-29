@@ -2,9 +2,12 @@ import http from 'http';
 import bodyParser from 'body-parser'
 import WebSocket from 'ws';
 import {getRepository} from 'typeorm';
+import map from './mapper'
 import express from 'express';
 import {connectSessionStorage, validateSession, disconnectSessionStorage} from './session-storage';
 import logger, { express_logger, express_error_logger } from './logger'
+
+import authentication_router from './routers/authentication'
 
 /* TODO: Use standard model to create database entity mapping, don't create a object on the fly :p */
 /* TODO: Rewrite this shit with typescript */
@@ -12,74 +15,15 @@ import logger, { express_logger, express_error_logger } from './logger'
 
 async function create_app() {
     const app = express();
-    const map = new Map();
     const server = http.createServer(app);
     const wss = new WebSocket.Server({ noServer: true });
     const sessionMgr = await connectSessionStorage();
 
     app.use(sessionMgr);
     app.use(bodyParser.json())
+
     app.use(express_logger);
-
-    /* Login & Logout *///{{{
-    app.post('/login', async function (req, res) {
-
-        const email  = req.body.email;
-        const passwd = req.body.password;
-
-        // Keycoded restriction, prevent someone from trying to fuck up the server
-        if(typeof email != 'string' || typeof passwd != 'string' || email.length >= 100 || passwd.length >= 100){
-            logger.warn(`invalid format of userinfo`, {
-                emailType: typeof email,
-                emailLength: email.length,
-                passwdType: typeof passwd,
-                passwdLength: passwd.length
-            });
-            res.status(403);
-            res.send('Rejected');
-            return;
-        }
-
-        /* TODO: Optimize this query by adding index on specific columns */
-        const match = await getRepository('user').findOne({
-            email: email,
-            password: passwd
-        });
-
-        if(match){
-            /* TODO: Don't use the userId as a session key like this,
-            *        This might introduce security issue, generate one uuid on login instead. */
-            const userid = match.userId;
-            req.session.userid = userid;
-            res.send({ result: 'OK', message: 'Session updated.'});
-        } else {
-            res.status(403);
-            res.send('Rejected');
-            return;
-        }
-
-    });
-    app.get('/whoami', function(request, response) {
-        if(!request.session.userid)
-            response.status(401).send('Forbidden')
-         else
-            response.send({userid: request.session.userid});
-    });
-    app.delete('/logout', function (request, response) {
-
-        if(typeof request.session.userid != 'string'){
-            response.status(401);
-            response.send("Rejected")
-            return;
-        }
-
-        const ws = map.get(request.session.userid);
-
-        request.session.destroy(() => {
-            if(ws) ws.close();
-            response.send({ result: 'OK', message: 'Session destroyed.'})
-        });
-    });//}}}
+    app.use('/', authentication_router);
 
     /* Handle WebSocket upgrade process *///{{{
     server.on('upgrade', function(request, socket, head) {
