@@ -1,10 +1,9 @@
 import http from 'http';
 import bodyParser from 'body-parser'
 import WebSocket from 'ws';
+import {getRepository} from 'typeorm';
 import express from 'express';
-import { createConnection } from 'typeorm';
-import ormconfig from '../ormconfig';
-import connectSessionStorage from './SessionStorage';
+import connectSessionStorage from './session-storage';
 import logger, { express_logger, express_error_logger } from './logger'
 
 /* TODO: Use standard model to create database entity mapping, don't create a object on the fly :p */
@@ -21,12 +20,6 @@ async function create_app() {
     app.use(sessionMgr);
     app.use(bodyParser.json())
     app.use(express_logger);
-
-    logger.info(`connecting to database ${ormconfig.type}://${ormconfig.host}:${ormconfig.port}`)
-    const connection = await createConnection(ormconfig);
-    logger.info(`connect to database successfully`)
-    
-    server.dbconnection = () => connection;
 
     /* Login & Logout *///{{{
     app.post('/login', async function (req, res) {
@@ -48,7 +41,7 @@ async function create_app() {
         }
 
         /* TODO: Optimize this query by adding index on specific columns */
-        const match = await connection.getRepository('user').findOne({
+        const match = await getRepository('user').findOne({
             email: email,
             password: passwd
         });
@@ -126,7 +119,7 @@ async function create_app() {
                 return;
             }
 
-            const repo = connection.getRepository('device_log');
+            const repo = getRepository('device_log');
             await repo.save({
                 deviceId: userid,
                 content : message_parsed
@@ -154,9 +147,6 @@ async function create_app() {
         await sessionMgr.close()
             .catch(exception_handler("failed to close session storage"))
 
-        logger.info(`Closing connection to database`)
-        await connection.close()
-            .catch(exception_handler("failed to close database connection"))
     }//}}}
 
     app.use(express_error_logger);
