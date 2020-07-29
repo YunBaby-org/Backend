@@ -22,7 +22,7 @@ const logger = winston.createLogger({
 });
 
 const express_logger = expressWinston.logger({
-    level      : (isProduction ? 'debug': 'debug'),
+    level      : (isProduction ? 'debug': 'info'),
     info       : winston.format.json,
     transports : [ new winston.transports.Console({ format: fancyConsoleFormat }), ],
 })

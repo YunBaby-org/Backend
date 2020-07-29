@@ -3,7 +3,7 @@ import bodyParser from 'body-parser'
 import WebSocket from 'ws';
 import {getRepository} from 'typeorm';
 import express from 'express';
-import connectSessionStorage from './session-storage';
+import {connectSessionStorage, validateSession, disconnectSessionStorage} from './session-storage';
 import logger, { express_logger, express_error_logger } from './logger'
 
 /* TODO: Use standard model to create database entity mapping, don't create a object on the fly :p */
@@ -60,14 +60,10 @@ async function create_app() {
 
     });
     app.get('/whoami', function(request, response) {
-        sessionMgr(request, {}, () => {
-            if(!request.session.userid){
-                response.status(401);
-                response.send({res:"failed"});
-            }
-            else
-                response.send({userid: request.session.userid});
-        });
+        if(!request.session.userid)
+            response.status(401).send('Forbidden')
+         else
+            response.send({userid: request.session.userid});
     });
     app.delete('/logout', function (request, response) {
 
@@ -88,17 +84,17 @@ async function create_app() {
     /* Handle WebSocket upgrade process *///{{{
     server.on('upgrade', function(request, socket, head) {
 
-        sessionMgr(request, {}, () => {
-            if(!request.session.userid){
-                socket.destroy();
-                return;
-            }
+        validateSession(request).then((userid) => { 
+            logger.info(`User ${userid} upgrade to websocket`)
 
-            /* Allow upgrade */
-            wss.handleUpgrade(request, socket, head, function (ws) {
-                wss.emit('connection', ws, request);
+            wss.handleUpgrade(request, socket, head, function(ws) {
+                wss.emit('connection', ws, request)
             });
+        }).catch(() => {
+            logger.warn(`failed to upgrade websocket`);
+            socket.destroy();
         });
+
     });//}}}
 
     /* Establish websocket connection *///{{{
@@ -144,7 +140,7 @@ async function create_app() {
         });
 
         logger.info(`Closing connection to redis session storage`)
-        await sessionMgr.close()
+        await disconnectSessionStorage()
             .catch(exception_handler("failed to close session storage"))
 
     }//}}}

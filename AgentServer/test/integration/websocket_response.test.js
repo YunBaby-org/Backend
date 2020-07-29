@@ -81,6 +81,33 @@ describe('Interaction between database and agent server', function () {
         expect(log.content.Response).to.be.equal(mock_response.Response);
     });
 
+    it('should report that user is authorized', (done) =>{
+        requester.get('/whoami')
+            .end(function(err, res) {
+                expect(err).to.be.null;
+                expect(res).to.have.status(200)
+                done();
+            });
+    })
+
+    it('should logout', (done) =>{
+        requester.delete('/logout')
+            .end(function(err, res) {
+                expect(err).to.be.null;
+                expect(res).to.have.status(200)
+                done();
+            });
+    })
+    
+    it('should report that user is not authorized', (done) =>{
+        requester.get('/whoami')
+            .end(function(err, res) {
+                expect(err).to.be.null;
+                expect(res).to.have.status(401)
+                done();
+            });
+    })
+
     this.afterAll(async () => {
         await server.close();
         await disconnect();
