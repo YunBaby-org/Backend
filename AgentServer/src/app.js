@@ -1,8 +1,6 @@
 import http from 'http';
 import bodyParser from 'body-parser'
-import WebSocket from 'ws';
-import {getRepository} from 'typeorm';
-import map from './mapper'
+import {handleWebsocketUpgrade} from './websocket-handler'
 import express from 'express';
 import {connectSessionStorage, validateSession, disconnectSessionStorage} from './session-storage';
 import logger, { express_logger, express_error_logger } from './logger'
@@ -16,7 +14,6 @@ import authentication_router from './routers/authentication'
 async function create_app() {
     const app = express();
     const server = http.createServer(app);
-    const wss = new WebSocket.Server({ noServer: true });
     const sessionMgr = await connectSessionStorage();
 
     app.use(sessionMgr);
@@ -30,46 +27,12 @@ async function create_app() {
 
         validateSession(request).then((userid) => { 
             logger.info(`User ${userid} upgrade to websocket`)
-
-            wss.handleUpgrade(request, socket, head, function(ws) {
-                wss.emit('connection', ws, request)
-            });
+            handleWebsocketUpgrade(request, socket, head);
         }).catch(() => {
             logger.warn(`failed to upgrade websocket`);
             socket.destroy();
         });
 
-    });//}}}
-
-    /* Establish websocket connection *///{{{
-    wss.on('connection', function (ws, request) {
-
-        const userid = request.session.userid;
-
-        map.set(userid, ws);
-
-        ws.on('message', async function incoming(msg) {
-            let message_parsed;
-
-            try{
-                message_parsed = JSON.parse(msg);
-            } catch(e) {
-                logger.error("Unable to parse payload into json")
-                ws.send("No");      /* this is for testing purpose, remove it in further version */
-                return;
-            }
-
-            const repo = getRepository('device_log');
-            await repo.save({
-                deviceId: userid,
-                content : message_parsed
-            });
-            ws.send("Ok");          /* this is for testing purpose, remove it in further versan */
-        });
-
-        ws.on('close', function() {
-            map.delete(userid);
-        });
     });//}}}
 
     /* Server on close *///{{{
