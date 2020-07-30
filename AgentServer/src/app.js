@@ -26,11 +26,11 @@ function createHttpServer(express_app) { //{{{
 
     });
 
-    server.on('close', function() {
+    server.on('close', async function() {
         logger.info(`Closing http server`)
 
         logger.info(`Closing connection to redis session storage`)
-        disconnectSessionStorage().catch((reason) => logger.warn(`failed to close session storage`, {reason: reason}))
+        await disconnectSessionStorage().catch((reason) => logger.warn(`failed to close session storage`, {reason: reason}))
     })
 
     return server

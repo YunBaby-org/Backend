@@ -1,6 +1,7 @@
 import WebSocket from 'ws';
 import map from './mapper';
 import {getRepository} from 'typeorm';
+import RequestHandler from './request-handler';
 import logger from './logger';
 
 const wss = new WebSocket.Server({ noServer: true });
@@ -11,6 +12,8 @@ wss.on('connection', function (ws, request) {
     const userid = request.session.userid;
 
     map.set(userid, ws);
+
+    RequestHandler.addQueue(userid)
 
     ws.on('message', async function incoming(msg) {
         let message_parsed;

@@ -1,6 +1,7 @@
 import { describe, it } from 'mocha';
 import faker from 'faker';
 import WebSocket from 'ws';
+import RequestHandler from '../../src/request-handler'
 import chaiHttp from 'chai-http';
 import chai from 'chai';
 import {getRepository} from 'typeorm'
@@ -24,6 +25,7 @@ describe('Interaction between database and agent server', function () {
     this.beforeAll( async () => {
 
         /* Create app and requester */
+        await RequestHandler.connect();
         await connect();
         server = await create_app();
         requester = chai.request.agent(server);
@@ -111,6 +113,7 @@ describe('Interaction between database and agent server', function () {
     this.afterAll(async () => {
         await server.close();
         await disconnect();
+        await RequestHandler.close();
     })
 
 });

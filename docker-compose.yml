@@ -11,8 +11,8 @@ volumes:
 networks:
     backend:
         driver: bridge
-services:
 
+services:
     postgresql:
         image: postgres:12-alpine
         volumes:
@@ -68,6 +68,17 @@ services:
             - flyway
             - postgresql
             - redis-session
+            - rabbitmq 
+
+    rabbitmq:
+        image: rabbitmq:3.8-management
+        networks:
+            - backend
+        expose:
+            - 5672
+        ports:
+            - 127.0.0.1:5672:5672
+            - 127.0.0.1:15672:15672
 
     # Session storage
     redis-session:
