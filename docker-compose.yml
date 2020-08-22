@@ -51,25 +51,6 @@ services:
         depends_on:
             - postgresql
 
-    agent-server:
-        build: ./AgentServer
-        environment:
-            - NODE_ENV=production
-        volumes:
-            - ./config/agnet-server/agent-server.env:/run/secrets/agent-server.env  # secret file
-        expose:
-            - 3000
-        environment:
-            - NODE_ENV=development
-            - AGENT_SERVER_CONFIG_FILE=/run/secrets/agent-server.env
-        networks:
-            - backend
-        depends_on:
-            - flyway
-            - postgresql
-            - redis-session
-            - rabbitmq 
-
     rabbitmq:
         image: rabbitmq:3.8-management
         networks:
