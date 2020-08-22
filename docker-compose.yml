@@ -38,6 +38,18 @@ services:
             - 127.0.0.1:5672:5672
             - 127.0.0.1:15672:15672
 
+    pgadmin4:
+        image: dpage/pgadmin4
+        environment:
+            - PGADMIN_LISTEN_PORT=5050
+            - PGADMIN_DEFAULT_EMAIL=someone@somewhere
+            - PGADMIN_DEFAULT_PASSWORD=password
+        ports:
+            - 127.0.0.1:5050:5050
+        networks:
+            - backend
+
+
 volumes:
     postgres-data:
     rabbitmq-data:
