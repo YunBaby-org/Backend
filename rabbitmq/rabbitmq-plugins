@@ -1,0 +1,7 @@
+[
+    rabbitmq_web_stomp,
+    rabbitmq_auth_backend_http,
+    rabbitmq_management,
+    rabbitmq_web_dispatch,
+    rabbitmq_management_agent
+].
