@@ -2,57 +2,34 @@ version: "3.7"
 
 # Local development setup
 
-volumes:
-    pg_data:
-        name: "postgres_data"
-    redis-session-data:
-        name: "redis-session-data"
-
 networks:
     backend:
         driver: bridge
 
 services:
-    postgresql:
-        image: postgres:12-alpine
-        volumes:
-            - pg_data:/var/lib/postgresql/data
-            - ./config/postgres/passwd:/run/secrets/postgres-passwd             # secret file
+    postgres:
+        build: ./postgres
         expose:
             - 5432
         ports:
             - 127.0.0.1:5432:5432
         networks:
             - backend
-        environment:
-            - POSTGRES_PASSWORD_FILE=/run/secrets/postgres-passwd               
-            - POSTGRES_USER=postgres
-            - POSTGRES_DB=postgres
-
-    pgAdmin:
-        image: dpage/pgadmin4:latest
-        ports:
-            - 127.0.0.1:80:80
-        expose:
-            - 80
-        networks:
-            - backend
-        env_file:
-            - ./config/pgAdmin/pgAdmin4.env                                     # Not so secret file (?)
+        volumes:
+            - postgres-data:/var/lib/postgresql/data
 
     flyway:
-        image: flyway/flyway
+        build: ./flyway
         networks:
             - backend
-        volumes:
-            - ./migrations:/flyway/sql
-            - ./config/flyway/flyway.conf:/flyway/conf/flyway.conf              # secret file
-        command: migrate
         depends_on:
-            - postgresql
+            - postgres
 
     rabbitmq:
-        image: rabbitmq:3.8-management
+        build: ./rabbitmq
+        hostname: rabbit-host
+        volumes:
+            - rabbitmq-data:/var/lib/rabbitmq
         networks:
             - backend
         expose:
@@ -61,14 +38,18 @@ services:
             - 127.0.0.1:5672:5672
             - 127.0.0.1:15672:15672
 
-    # Session storage
-    redis-session:
-        image: redis:6-alpine
-        volumes:
-            - redis-session-data:/data
+    pgadmin4:
+        image: dpage/pgadmin4
+        environment:
+            - PGADMIN_LISTEN_PORT=5050
+            - PGADMIN_DEFAULT_EMAIL=someone@somewhere
+            - PGADMIN_DEFAULT_PASSWORD=password
         ports:
-            - 127.0.0.1:6379:6379
-        expose:
-            - 6379
+            - 127.0.0.1:5050:5050
         networks:
             - backend
+
+
+volumes:
+    postgres-data:
+    rabbitmq-data:

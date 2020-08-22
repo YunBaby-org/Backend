@@ -1,0 +1,11 @@
+{
+  "rabbit_version": "3.6.5",
+  "users": [],
+  "vhosts": [ { "name": "/" } ],
+  "permissions": [ { "user": "guest", "vhost": "/", "configure": ".*", "write": ".*", "read": ".*" } ],
+  "parameters": [],
+  "policies": [],
+  "queues": [],
+  "exchanges": [],
+  "bindings": []
+}
