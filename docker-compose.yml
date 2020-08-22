@@ -41,13 +41,9 @@ services:
             - ./config/pgAdmin/pgAdmin4.env                                     # Not so secret file (?)
 
     flyway:
-        image: flyway/flyway
+        build: ./flyway
         networks:
             - backend
-        volumes:
-            - ./migrations:/flyway/sql
-            - ./config/flyway/flyway.conf:/flyway/conf/flyway.conf              # secret file
-        command: migrate
         depends_on:
             - postgresql
 
