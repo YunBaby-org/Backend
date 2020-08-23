@@ -1,11 +1,97 @@
 {
-  "rabbit_version": "3.6.5",
+  "rabbit_version": "3.8.5",
+  "rabbitmq_version": "3.8.5",
+  "product_name": "RabbitMQ",
+  "product_version": "3.8.5",
   "users": [],
-  "vhosts": [ { "name": "/" } ],
-  "permissions": [ { "user": "guest", "vhost": "/", "configure": ".*", "write": ".*", "read": ".*" } ],
+  "vhosts": [],
+  "permissions": [],
+  "topic_permissions": [],
   "parameters": [],
+  "global_parameters": [],
   "policies": [],
-  "queues": [],
-  "exchanges": [],
-  "bindings": []
+  "queues": [
+    {
+      "name": "monitor.boundary",
+      "vhost": "/",
+      "durable": true,
+      "auto_delete": false,
+      "arguments": {
+        "x-queue-type": "classic"
+      }
+    },
+    {
+      "name": "monitor.responses",
+      "vhost": "/",
+      "durable": true,
+      "auto_delete": false,
+      "arguments": {
+        "x-queue-type": "classic"
+      }
+    },
+    {
+      "name": "monitor.dead-letter",
+      "vhost": "/",
+      "durable": true,
+      "auto_delete": false,
+      "arguments": {
+        "x-queue-type": "classic"
+      }
+    },
+    {
+      "name": "monitor.locating-server",
+      "vhost": "/",
+      "durable": true,
+      "auto_delete": false,
+      "arguments": {
+        "x-queue-type": "classic"
+      }
+    }
+  ],
+  "exchanges": [
+    {
+      "name": "tracker-event",
+      "vhost": "/",
+      "type": "topic",
+      "durable": true,
+      "auto_delete": false,
+      "internal": false,
+      "arguments": {}
+    },
+    {
+      "name": "dead-letter",
+      "vhost": "/",
+      "type": "topic",
+      "durable": true,
+      "auto_delete": false,
+      "internal": false,
+      "arguments": {}
+    }
+  ],
+  "bindings": [
+    {
+      "source": "dead-letter",
+      "vhost": "/",
+      "destination": "monitor.dead-letter",
+      "destination_type": "queue",
+      "routing_key": "#",
+      "arguments": {}
+    },
+    {
+      "source": "tracker-event",
+      "vhost": "/",
+      "destination": "monitor.boundary",
+      "destination_type": "queue",
+      "routing_key": "tracker.*.event.respond.*",
+      "arguments": {}
+    },
+    {
+      "source": "tracker-event",
+      "vhost": "/",
+      "destination": "monitor.responses",
+      "destination_type": "queue",
+      "routing_key": "tracker.*.event.respond.*",
+      "arguments": {}
+    }
+  ]
 }
