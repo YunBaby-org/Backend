@@ -5,6 +5,8 @@ version: "3.7"
 networks:
     backend:
         driver: bridge
+    rabbit-auth-net:
+        driver: bridge
 
 services:
     postgres:
@@ -32,6 +34,7 @@ services:
             - rabbitmq-data:/var/lib/rabbitmq
         networks:
             - backend
+            - rabbit-auth-net
         expose:
             - 5672
         ports:
@@ -48,6 +51,16 @@ services:
             - 127.0.0.1:5050:5050
         networks:
             - backend
+
+    rabbitmq-auth-http:
+        build: 
+            context: ./rabbitmq-authentication-backend-http
+            args:
+                NODE_ENV: development
+        expose:
+            - 80
+        networks:
+            - rabbit-auth-net
 
 
 volumes:
