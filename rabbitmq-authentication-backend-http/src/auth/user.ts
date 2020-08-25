@@ -1,7 +1,13 @@
-export interface IUserParameter {
+import getAuthenticationCodeManager from '../authentication-code-manager';
+
+export interface UserRequestParam {
   username: string;
   password: string;
 }
-export function authUser({username, password}: IUserParameter): boolean {
-  return username.match(/^user/) !== null;
+export async function authUser({username, password}: UserRequestParam) {
+  const authManager = getAuthenticationCodeManager();
+  return await authManager.consumeAuthCode({
+    username: username,
+    authcode: password,
+  });
 }
