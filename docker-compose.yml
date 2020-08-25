@@ -4,9 +4,8 @@ version: "3.7"
 
 networks:
     backend:
-        driver: bridge
     rabbit-auth-net:
-        driver: bridge
+    redis-authorization-code-storage:
 
 services:
     postgres:
@@ -59,8 +58,22 @@ services:
                 NODE_ENV: development
         expose:
             - 80
+        ports:
+            - 127.0.0.1:12300:80
         networks:
             - rabbit-auth-net
+            - redis-authorization-code-storage
+        environment:
+            - REDIS_HOST=redis-authorization-code-storage
+            - REDIS_PORT=6379
+
+    redis-authorization-code-storage:
+        image: redis:6
+        expose:
+            - 6379
+        networks:
+            - redis-authorization-code-storage
+
 
 
 volumes:
