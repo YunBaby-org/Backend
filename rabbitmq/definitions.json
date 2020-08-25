@@ -4,8 +4,16 @@
   "product_name": "RabbitMQ",
   "product_version": "3.8.5",
   "users": [],
-  "vhosts": [],
-  "permissions": [],
+  "vhosts": [{ "name": "user" }],
+  "permissions": [
+    {
+      "user": "guest",
+      "vhost": "user",
+      "configure": ".*",
+      "write": ".*",
+      "read": ".*"
+    }
+  ],
   "topic_permissions": [],
   "parameters": [],
   "global_parameters": [],
