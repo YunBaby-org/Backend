@@ -37,7 +37,7 @@ services:
         expose:
             - 5672
         ports:
-            - 127.0.0.1:5672:5672
+            - 0.0.0.0:5672:5672
             - 127.0.0.1:15672:15672
 
     pgadmin4:
@@ -51,21 +51,33 @@ services:
         networks:
             - backend
 
-    rabbitmq-auth-http:
+    rabbitmq-authn-http:
         build: 
             context: ./rabbitmq-authentication-backend-http
-            args:
-                NODE_ENV: development
         expose:
             - 80
         ports:
-            - 127.0.0.1:12300:80
+            - 0.0.0.0:12300:80
         networks:
             - rabbit-auth-net
             - redis-authorization-code-storage
         environment:
             - REDIS_HOST=redis-authorization-code-storage
             - REDIS_PORT=6379
+            - AUTH=AUTHN
+
+    rabbitmq-authz-http:
+        build: 
+            context: ./rabbitmq-authentication-backend-http
+        expose:
+            - 80
+        networks:
+            - rabbit-auth-net
+            - redis-authorization-code-storage
+        environment:
+            - REDIS_HOST=redis-authorization-code-storage
+            - REDIS_PORT=6379
+            - AUTH=AUTHZ
 
     redis-authorization-code-storage:
         image: redis:6
