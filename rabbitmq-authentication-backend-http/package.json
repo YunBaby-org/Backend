@@ -1,6 +1,6 @@
 {
   "name": "rabbitmq-auth-backend-http",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "description": "The http authorization backend for internal RabbitMQ",
   "main": "build/src/index.js",
   "types": "build/src/index.d.ts",
@@ -14,6 +14,7 @@
     "check": "gts check",
     "clean": "gts clean",
     "compile": "tsc",
+    "compile-production": "tsc -p ./tsconfig.prod.json",
     "fix": "gts fix",
     "prepare": "npm run compile",
     "pretest": "npm run compile",
