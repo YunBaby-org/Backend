@@ -10,7 +10,12 @@
 ## 建立本地開發環境
 
 ```shell
-docker-compose build && docker-compose run
+# start
+docker-compose up
+# build
+docker-compose build
+# remove data
+docker-compose rm
 ```
 
 - **這個 Compose setup 是針對測試環境，不能用在 Production**
