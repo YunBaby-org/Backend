@@ -23,6 +23,7 @@ services:
         build: ./flyway
         networks:
             - backend
+        restart: on-failure
         depends_on:
             - postgres
 
@@ -86,7 +87,20 @@ services:
         networks:
             - redis-authorization-code-storage
 
-
+    response-monitor:
+        build:
+            context: ./monitors/respones-monitor
+        restart: always
+        networks:
+            - backend
+        environment:
+            - RABBITMQ_USER=guest
+            - RABBITMQ_PASS=guest
+            - RABBITMQ_HOST=rabbitmq
+            - RABBITMQ_PORT=5672
+            - PREFETCH_SIZE=10
+        depends_on:
+            - rabbitmq
 
 volumes:
     postgres-data:
