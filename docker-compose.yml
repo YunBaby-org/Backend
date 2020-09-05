@@ -102,6 +102,22 @@ services:
         depends_on:
             - rabbitmq
 
+    frontend-static-files:
+        build:
+            context: ./frontend
+        image: frontend-static-files
+
+    nginx:
+        build:
+            context: ./nginx
+        restart: always
+        networks:
+            - backend
+        ports:
+            - 0.0.0.0:80:80
+        depends_on:
+            - frontend-static-files
+
 volumes:
     postgres-data:
     rabbitmq-data:
