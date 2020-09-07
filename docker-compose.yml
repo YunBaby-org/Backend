@@ -53,8 +53,7 @@ services:
             - backend
 
     rabbitmq-authn-http:
-        build: 
-            context: ./rabbitmq-authentication-backend-http
+        image: docker.pkg.github.com/yunbaby-org/rabbitmq-auth-backend-http/rabbitmq-auth-server:latest
         expose:
             - 80
         ports:
@@ -68,8 +67,7 @@ services:
             - AUTH=AUTHN
 
     rabbitmq-authz-http:
-        build: 
-            context: ./rabbitmq-authentication-backend-http
+        image: docker.pkg.github.com/yunbaby-org/rabbitmq-auth-backend-http/rabbitmq-auth-server:latest
         expose:
             - 80
         networks:
@@ -101,17 +99,6 @@ services:
         depends_on:
             - rabbitmq
 
-    frontend-static-files:
-        build:
-            context: ./frontend
-            args:
-                VUE_APP_BASE_URL: ${FRONTEND_VUE_APP_BASE_URL}
-                VUE_APP_GMAP_API: ${FRONTEND_VUE_APP_GMAP_API:-MyGoogleMapApiKey}
-                VUE_APP_ROAD_API: ${FRONTEND_VUE_APP_ROAD_API:-MyGoogleRoadApiKey}
-                VUE_APP_AMQP_USER: ${FRONTEND_VUE_APP_AMQP_USER:-guest}
-                VUE_APP_AMQP_PASSWORD: ${FRONTEND_VUE_APP_AMQP_PASSWORD:-guest}
-        image: frontend-static-files
-
     nginx:
         build:
             context: ./nginx
@@ -120,8 +107,6 @@ services:
             - backend
         ports:
             - 0.0.0.0:80:80
-        depends_on:
-            - frontend-static-files
 
 volumes:
     postgres-data:
