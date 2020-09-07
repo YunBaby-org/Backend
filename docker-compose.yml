@@ -88,8 +88,7 @@ services:
             - redis-authorization-code-storage
 
     response-monitor:
-        build:
-            context: ./monitors/respones-monitor
+        image: docker.pkg.github.com/yunbaby-org/response-monitor/response-monitor:latest
         restart: always
         networks:
             - backend
