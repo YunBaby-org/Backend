@@ -20,7 +20,7 @@ services:
             - postgres-data:/var/lib/postgresql/data
 
     flyway:
-        build: ./flyway
+        image: docker.pkg.github.com/yunbaby-org/flyway-migraiton/flyway-migraiton:0.0.1
         networks:
             - backend
         restart: on-failure
