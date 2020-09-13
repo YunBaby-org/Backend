@@ -6,6 +6,7 @@ networks:
     backend:
     rabbit-auth-net:
     redis-authorization-code-storage:
+    redis-mobile-auth-server:
 
 services:
     postgres:
@@ -26,7 +27,6 @@ services:
         restart: on-failure
         depends_on:
             - postgres
-
     rabbitmq:
         image: docker.pkg.github.com/yunbaby-org/rabbitmq/rabbitmq:latest
         hostname: rabbit-host
@@ -138,6 +138,27 @@ services:
             - DBHOST=postgres
             - DBPASSWORD=password
 
+    mobile-authentication-server:
+        image: docker.pkg.github.com/yunbaby-org/mobile-authentication-server/mobile-authentication-server:latest
+        networks:
+            - backend
+            - redis-mobile-auth-server
+        environment:
+            - REDIS_HOST=mobile-authentication-server-redis
+            - POSTGRES_HOST=postgres
+            - POSTGRES_PORT=5432
+            - POSTGRES_DATABASE=postgres
+            - POSTGRES_USERNAME=postgres
+            - POSTGRES_PASSWORD=postgres
+            - APP_HOST=0.0.0.0
+            - APP_PORT=3000
+
+    mobile-authentication-server-redis:
+        image: redis:6
+        expose:
+            - 6379
+        networks:
+            - redis-mobile-auth-server
 
 volumes:
     postgres-data:
