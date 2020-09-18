@@ -66,6 +66,8 @@ services:
             - REDIS_HOST=redis-authorization-code-storage
             - REDIS_PORT=6379
             - AUTH=AUTHN
+        depends_on:
+            - redis-authorization-code-storage
 
     rabbitmq-authz-http:
         image: docker.pkg.github.com/yunbaby-org/rabbitmq-auth-backend-http/rabbitmq-auth-server:latest
@@ -103,6 +105,7 @@ services:
             - DATABASE_PASS=password
         depends_on:
             - rabbitmq
+            - postgres
 
     nginx:
         build:
@@ -112,6 +115,11 @@ services:
             - backend
         ports:
             - 0.0.0.0:80:80
+        depends_on:
+            - auth-server 
+            - rest-server
+            - mobile-authentication-server
+            - rabbitmq-authn-http
 #        command: [nginx-debug, '-g', 'daemon off;']
 
     auth-server:
@@ -125,6 +133,8 @@ services:
             - DBUSER=postgres
             - DBHOST=postgres
             - DBPASSWORD=password
+        depends_on:
+            - postgres
 
     rest-server:
         image: docker.pkg.github.com/yunbaby-org/server/rest_server:1.0
@@ -137,6 +147,9 @@ services:
             - DBUSER=postgres
             - DBHOST=postgres
             - DBPASSWORD=password
+        depends_on:
+            - postgres
+
 
     mobile-authentication-server:
         image: docker.pkg.github.com/yunbaby-org/mobile-authentication-server/mobile-authentication-server:latest
@@ -152,6 +165,10 @@ services:
             - POSTGRES_PASSWORD=postgres
             - APP_HOST=0.0.0.0
             - APP_PORT=3000
+        depends_on:
+            - postgres
+            - mobile-authentication-server-redis
+
 
     mobile-authentication-server-redis:
         image: redis:6
