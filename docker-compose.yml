@@ -147,6 +147,8 @@ services:
             - DBUSER=postgres
             - DBHOST=postgres
             - DBPASSWORD=password
+            - RABBITHOST=rabbitmq
+            - RABBITPORT=5672
         depends_on:
             - postgres
 
