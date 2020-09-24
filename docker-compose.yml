@@ -144,7 +144,7 @@ services:
 #        command: [nginx-debug, '-g', 'daemon off;']
 
     auth-server:
-        image: docker.pkg.github.com/yunbaby-org/server/auth_server:1.0
+        image: docker.pkg.github.com/yunbaby-org/server/auth_server:latest
         restart: always
         networks:
             - backend
@@ -159,7 +159,7 @@ services:
             - pgbouncer
 
     rest-server:
-        image: docker.pkg.github.com/yunbaby-org/server/rest_server:1.0
+        image: docker.pkg.github.com/yunbaby-org/server/rest_server:latest
         restart: always
         networks:
             - backend
