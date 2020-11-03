@@ -108,6 +108,26 @@ services:
             - 6379
         networks:
             - redis-authorization-code-storage
+            
+    boundary-monitor:
+        image: docker.pkg.github.com/yunbaby-org/boundary-monitor/boundary-monitor:0.1
+        restart: always
+        networks: 
+            - backend
+        environment: 
+            - DB_HOST=pgbouncer
+            - DB_PORT=5432
+            - DB_USER=postgres
+            - DB_PASS=password
+            - RABBITMQ_USER=guest
+            - RABBITMQ_PASS=guest
+            - RABBITMQ_PORT=5672
+            - RABBITMQ_HOST=rabbitmq
+            - SMS_USER=b10617046
+            - SMS_PASS=p499uycb
+        depends_on:
+            - rabbitmq
+            - postgres
 
     response-monitor:
         image: docker.pkg.github.com/yunbaby-org/response-monitor/response-monitor:0.3
@@ -124,6 +144,7 @@ services:
             - DATABASE_NAME=postgres
             - DATABASE_USER=postgres
             - DATABASE_PASS=password
+
         depends_on:
             - rabbitmq
             - postgres
