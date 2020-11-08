@@ -129,6 +129,19 @@ services:
             - rabbitmq
             - postgres
 
+    dead-letter-monitor:
+        image: docker.pkg.github.com/yunbaby-org/dead-letter-monitor/dead-letter-monitor:0.0.1
+        restart: on-failure
+        networks:
+            - backend
+        environment:
+            - RABBITMQ_USER=guest
+            - RABBITMQ_PASS=guest
+            - RABBITMQ_PORT=5672
+            - RABBITMQ_HOST=rabbitmq
+        depends_on:
+            - rabbitmq
+
     response-monitor:
         image: docker.pkg.github.com/yunbaby-org/response-monitor/response-monitor:0.3
         restart: always
