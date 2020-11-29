@@ -8,6 +8,7 @@ networks:
     rabbit-auth-net:
     redis-authorization-code-storage:
     redis-mobile-auth-server:
+    redis-boundary-monitor:
 
 services:
     pgbouncer:
@@ -108,13 +109,25 @@ services:
             - 6379
         networks:
             - redis-authorization-code-storage
-            
-    boundary-monitor:
-        image: docker.pkg.github.com/yunbaby-org/boundary-monitor/boundary-monitor:0.1
+    location-server:
+        image: docker.pkg.github.com/yunbaby-org/location-server/location:1.0
         restart: always
         networks: 
             - backend
         environment: 
+            - RABBITHOST=rabbitmq
+            - RABBITPORT=5672
+            - YOUR_API_KEY=AIzaSyC8zHDqr2XwpSKSiJgkRcnUI7I0c018k80
+        depends_on: 
+            - rabbitmq
+    boundary-monitor:
+        image: docker.pkg.github.com/yunbaby-org/boundary-monitor/boundary-monitor:0.2
+        restart: always
+        networks: 
+            - backend
+            - redis-boundary-monitor
+        environment: 
+            - REDIS_HOST=boundary-monitor-redis
             - DB_HOST=pgbouncer
             - DB_PORT=5432
             - DB_USER=postgres
@@ -128,6 +141,7 @@ services:
         depends_on:
             - rabbitmq
             - postgres
+            - boundary-monitor-redis
 
     dead-letter-monitor:
         image: docker.pkg.github.com/yunbaby-org/dead-letter-monitor/dead-letter-monitor:0.0.1
@@ -237,6 +251,12 @@ services:
         networks:
             - redis-mobile-auth-server
 
+    boundary-monitor-redis:
+        image: redis:6
+        expose: 
+            - 6379 
+        networks: 
+            - redis-boundary-monitor
 volumes:
     postgres-data:
     rabbitmq-data:

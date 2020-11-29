@@ -1,7 +1,7 @@
 ###########################
 ## Frontend static files ##
 ###########################
-FROM docker.pkg.github.com/yunbaby-org/frontend/frontend-static-files:latest as frontend-static
+FROM docker.pkg.github.com/yunbaby-org/frontend/frontend-static-files:1.1 as frontend-static
 
 ###########
 ## Nginx ##
